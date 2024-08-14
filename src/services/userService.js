@@ -1,8 +1,14 @@
 const User = require("../models/user");
 const { hashPassword, comparePassword } = require("../util/hashPassword");
+const { access_token } = require("../util/jwtWeb");
 
 const createUserService = async (name, email, password) => {
   try {
+    //check user exist
+    const user = await User.findOne({ email });
+    if (user) {
+      return null;
+    }
     const hassPass = await hashPassword(password);
     let result = await User.create({
       name: name,
@@ -29,7 +35,20 @@ const loginUserService = async (txtEmail, password) => {
           EM: "Email/Password không hợp lệ!",
         };
       } else {
-        return "create an access token";
+        const payload = {
+          email: user.email,
+          name: user.name,
+        };
+
+        const access = access_token(payload);
+        return {
+          EC: 0,
+          access,
+          user: {
+            email: user.email,
+            name: user.name,
+          },
+        };
       }
     } else {
       return {
@@ -43,7 +62,18 @@ const loginUserService = async (txtEmail, password) => {
   }
 };
 
+const getUserService = async (txtEmail, password) => {
+  try {
+    const result = await User.find({}).select("-password");
+    return result;
+  } catch (error) {
+    console.log(error);
+    return null;
+  }
+};
+
 module.exports = {
   createUserService,
   loginUserService,
+  getUserService,
 };
