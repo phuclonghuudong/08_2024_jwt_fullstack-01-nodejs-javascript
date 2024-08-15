@@ -12,6 +12,11 @@ const auth = (req, res, next) => {
       //verify token
       try {
         const decoded = verify_token(token);
+        req.user = {
+          email: decoded.email,
+          name: decoded.name,
+        };
+
         next();
       } catch (error) {
         return res.status(401).json({
